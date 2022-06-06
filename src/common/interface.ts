@@ -6,7 +6,13 @@ import type {
   ModuleFormat
 } from 'rollup'
 
-export type BumpOptions = RollupOptions
+/**
+ *@description Bump config
+ */
+export type BumpOptions = Omit<RollupOptions, 'output'> &
+  BumpOutputOptions & {
+    minifiy?: boolean
+  }
 
 export type BumpOutputOptions = Omit<OutputOptions, 'format'> & {
   format?: ModuleFormat | ModuleFormat[]
