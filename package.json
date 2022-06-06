@@ -3,10 +3,9 @@
   "version": "0.0.0",
   "description": "A zero config bundler.",
   "main": "index.js",
-  "scripts": {
-  },
-  "bin":{
-    "non":"./bin/bump.js"
+  "scripts": {},
+  "bin": {
+    "non": "./bin/bump.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +18,8 @@
   "dependencies": {
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "rollup": "^2.75.5"
+    "@swc/core": "^1.2.197",
+    "rollup": "^2.75.5",
+    "rollup-plugin-swc3": "^0.3.0"
   }
 }
