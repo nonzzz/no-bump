@@ -1,0 +1,9 @@
+[Makefile]
+
+tab_width = 2
+indent_style = tab
+
+[*.{js,ts}]
+
+tab_width = 4
+indent_size = 4

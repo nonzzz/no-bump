@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "strict": true,
+        "noImplicitAny": true,
+        "target": "ES2017",
+        "baseUrl": ".",
+        "outDir": "lib",
+        "importHelpers": true,
+        "moduleResolution": "Node",
+    },
+    
+}
