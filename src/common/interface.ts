@@ -12,7 +12,9 @@ import type {
 export type BumpOptions = Omit<RollupOptions, 'output'> & {
   output?: BumpOutputOptions & {
     minifiy?: boolean
+    dts?: boolean
   }
+  preset?: string[]
 }
 
 export type BumpOutputOptions = Omit<OutputOptions, 'format'> & {

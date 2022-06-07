@@ -5,9 +5,10 @@ import yaml from 'yaml'
 import { universalInput, universalOutput, getUniversalPlugins } from './common/universal-conf'
 import { mayBeConfig, omit, isPlainObject, serialize, pick } from './common/utils'
 import { exist, readJson } from './common/fs'
-import type { BumpOptions, RollupOptions, ModuleFormat, RollupOutputOptions } from './common/interface'
+import type { BumpOptions, RollupOptions, ModuleFormat, RollupOutputOptions, RollupPlugin } from './common/interface'
 import path from 'path'
 import { print } from './common/logger'
+import dts from 'rollup-plugin-dts'
 /**
  * dine config typings.
  */
@@ -86,7 +87,7 @@ const buildImpl = async (options?: BumpOptions) => {
 
   const getDestPath = (sub: string) => {
     const { output } = optionImpl as BumpOptions
-    if (Array.isArray(optionImpl.input)) {
+    if (Array.isArray(optionImpl.input) || isPlainObject(optionImpl.input)) {
       if (output?.dir) return path.join(output.dir, sub)
       throw new Error("[Bump]: when you're use multiple input. You should set dir :)")
     }
@@ -111,6 +112,22 @@ const buildImpl = async (options?: BumpOptions) => {
         })
       )
     )
+
+    if (options?.output?.dts) {
+      const inputs = Array.isArray(optionImpl.input)
+        ? optionImpl.input
+        : isPlainObject(optionImpl.input)
+        ? serialize(optionImpl.input as Record<string, string>)
+        : [optionImpl.input as string]
+
+      const bundle = await rollup({
+        input: inputs,
+        plugins: [...optionImpl.plugins!, dts()]
+      })
+      bundle.write({
+        dir: 'types'
+      })
+    }
   } catch (error) {
     if (error instanceof Error) {
       print.danger(error.message)
@@ -137,6 +154,10 @@ const parserOptions = (defaultOptions: RollupOptions, userOptions: BumpOptions):
   if (!userOptions.plugins) {
     options.plugins = defaultOptions.plugins
   }
+  if (userOptions.preset) {
+    delete options?.preset
+    options.plugins = [...options.plugins!]
+  }
   return options as any
 }
 
@@ -159,4 +180,11 @@ const loadConfigFromBundledFile = async (fileName: string, bundledCode: string):
   const config = raw.__esModule ? raw.default : raw
   require.extensions[extension] = defaultLoader
   return config
+}
+
+const loadPreset = (path: string): RollupPlugin[] => {
+  delete require.cache[require.resolve(path)]
+  const { plugins } = require(path)
+  if (plugins) return plugins
+  return []
 }

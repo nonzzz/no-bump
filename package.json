@@ -2,7 +2,9 @@
   "name": "bump",
   "version": "0.0.0",
   "description": "A zero config bundler.",
-  "main": "index.js",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "types": "types/src/index.d.ts",
   "scripts": {
     "build": "rm -rf lib && ts-node src/cli.ts -c"
   },
