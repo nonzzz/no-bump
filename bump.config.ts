@@ -1,10 +1,9 @@
 import { define } from './src'
-import fg from 'fast-glob'
 
 export default define({
-  input: fg.sync(['./src/**'], { dot: true }),
+  input: ['src/index.ts', 'src/cli.ts'],
   output: {
     dir: 'lib',
-    format: 'cjs'
+    format: ['esm', 'cjs']
   }
 })

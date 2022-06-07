@@ -5,8 +5,9 @@ import yaml from 'yaml'
 import { universalInput, universalOutput, getUniversalPlugins } from './common/universal-conf'
 import { mayBeConfig, omit, isPlainObject, serialize, pick } from './common/utils'
 import { exist } from './common/fs'
-import type { BumpOptions, RollupOptions } from './common/interface'
+import type { BumpOptions, RollupOptions, ModuleFormat, RollupOutputOptions } from './common/interface'
 import path from 'path'
+import { dependencies } from '../package.json'
 /**
  * dine config typings.
  */
@@ -54,6 +55,7 @@ const buildImpl = async (options?: BumpOptions) => {
     Object.assign(optionImpl, {
       input: options?.input,
       output: {
+        dir: userOutputOptions?.dir,
         plugins: userOutputOptions?.plugins ?? serialize(getUniversalPlugins())
       }
     })
@@ -64,6 +66,22 @@ const buildImpl = async (options?: BumpOptions) => {
 
   // @ts-ignore
   formats = Array.isArray(formats) ? formats : [formats]
+  const bundle = await rollup({
+    input: optionImpl.input,
+    // @ts-nocheck
+    plugins: serialize(getUniversalPlugins(false)),
+    external: Object.keys(dependencies)
+  })
+
+  await Promise.all(
+    (formats as ModuleFormat[]).map((format) =>
+      bundle.write({
+        dir: path.join((optionImpl?.output as RollupOutputOptions).dir!, format),
+        format,
+        exports: 'auto'
+      })
+    )
+  )
 }
 
 interface NodeModuleWithCompile extends NodeModule {

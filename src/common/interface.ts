@@ -19,4 +19,4 @@ export type BumpOutputOptions = Omit<OutputOptions, 'format'> & {
   format?: ModuleFormat | ModuleFormat[]
 }
 
-export { RollupPlugin, RollupInputOption, RollupOptions }
+export { RollupPlugin, RollupInputOption, RollupOptions, ModuleFormat, OutputOptions as RollupOutputOptions }

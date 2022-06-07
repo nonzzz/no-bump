@@ -4,12 +4,13 @@
         "strict": true,
         "noImplicitAny": true,
         "target": "ES2017",
+        "declaration": true,
         "module": "CommonJS",
         "baseUrl": ".",
         "outDir": "lib",
         "esModuleInterop": true,
+        "resolveJsonModule": true,
         "importHelpers": true,
         "moduleResolution": "Node",
-    },
-    
+    }
 }
