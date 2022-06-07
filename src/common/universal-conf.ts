@@ -5,13 +5,12 @@ import json from '@rollup/plugin-json'
 
 import type { RollupPlugin, RollupInputOption, BumpOutputOptions } from './interface'
 
-export const getUniversalPlugins = (mini = true) => {
+export const getUniversalPlugins = (mini?: boolean) => {
   const draft: Record<string, RollupPlugin> = {
     json: json(),
     common: commonjs({ esmExternals: true }),
     resolve: nodeResolve(),
-    swc: swc(),
-    
+    swc: swc()
   }
   if (mini) Reflect.set(draft, 'minify', minify())
   return draft
@@ -25,11 +24,11 @@ export const getUniversalPlugins = (mini = true) => {
 export const universalInput: RollupInputOption = 'src/index.js'
 
 /**
- *@default ['cjs','esm','umd']
+ *@default ['cjs','esm']
  @description preset generator formats
  */
 
 export const universalOutput: BumpOutputOptions = {
   dir: 'dist',
-  format: ['cjs', 'esm', 'umd']
+  format: ['cjs', 'esm']
 }

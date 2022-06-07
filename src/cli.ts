@@ -1,5 +1,5 @@
-import { build } from './index'
-import { resolveUserConfig } from './api_impl'
+import { resolveUserConfig, build } from './api_impl'
+import { print } from './common/logger'
 
 const osArgs = process.argv.slice(2)
 
@@ -12,7 +12,7 @@ export default (async function () {
           Object.assign(options, await resolveUserConfig())
           break
         } catch (error) {
-          console.log(error)
+          if (error instanceof Error) print.danger(error.message)
           process.exit(1)
         }
     }

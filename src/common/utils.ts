@@ -1,5 +1,3 @@
-import tty from 'tty'
-
 export const serialize = <T>(source: Record<string, T>): T[] => Object.values(source)
 
 // If the user does not have too many configuration options, the yaml file can be used

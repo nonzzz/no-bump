@@ -1,0 +1,4 @@
+input: ['src/index.ts', 'src/cli.ts']
+output:
+  dir: lib
+  format: ['esm', 'cjs']
