@@ -9,13 +9,14 @@ import type {
 /**
  *@description Bump config
  */
-export type BumpOptions = Omit<RollupOptions, 'output'> &
-  BumpOutputOptions & {
+export type BumpOptions = Omit<RollupOptions, 'output'> & {
+  output?: BumpOutputOptions & {
     minifiy?: boolean
   }
+}
 
 export type BumpOutputOptions = Omit<OutputOptions, 'format'> & {
   format?: ModuleFormat | ModuleFormat[]
 }
 
-export { RollupPlugin, RollupInputOption }
+export { RollupPlugin, RollupInputOption, RollupOptions }

@@ -6,9 +6,17 @@ import type { RollupPlugin, RollupInputOption, BumpOutputOptions } from './inter
 
 export const getUniversalPlugins = (mini = true) => {
   const draft: Record<string, RollupPlugin> = {
-    resolve: nodeResolve,
-    common: commonjs,
-    swc
+    common: commonjs({ esmExternals: true }),
+    resolve: nodeResolve({
+      exportConditions: ['import', 'require', 'default']
+    }),
+    swc: swc({
+      jsc: {
+        parser: {
+          syntax: 'typescript'
+        }
+      }
+    })
   }
   if (mini) Reflect.set(draft, 'minify', minify)
   return draft
@@ -27,6 +35,6 @@ export const universalInput: RollupInputOption = 'src/index.js'
  */
 
 export const universalOutput: BumpOutputOptions = {
-  dir: 'dist/index.js',
+  dir: 'dist',
   format: ['cjs', 'esm', 'umd']
 }

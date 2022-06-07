@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "A zero config bundler.",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "ts-node src/cli.ts"
+  },
   "bin": {
     "bump": "./bin/bump.js"
   },
@@ -12,7 +14,10 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^17.0.40",
+    "fast-glob": "^3.2.11",
     "prettier": "^2.6.2",
+    "ts-node": "^10.8.1",
+    "tslib": "^2.4.0",
     "typescript": "^4.7.3"
   },
   "dependencies": {
@@ -20,6 +25,7 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@swc/core": "^1.2.197",
     "rollup": "^2.75.5",
-    "rollup-plugin-swc3": "^0.3.0"
+    "rollup-plugin-swc3": "^0.3.0",
+    "yaml": "^2.1.1"
   }
 }
