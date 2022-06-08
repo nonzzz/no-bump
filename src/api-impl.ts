@@ -122,7 +122,7 @@ const buildImpl = async (options?: BumpOptions) => {
 
       const bundle = await rollup({
         input: inputs,
-        plugins: [...optionImpl.plugins!, dts()]
+        plugins: [dts()]
       })
       bundle.write({
         dir: 'types'

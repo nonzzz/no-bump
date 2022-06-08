@@ -1,4 +1,4 @@
-import { resolveUserConfig, build } from './api_impl'
+import { resolveUserConfig, build } from './api-impl'
 import { print } from './common/logger'
 
 const osArgs = process.argv.slice(2)

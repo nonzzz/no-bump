@@ -3,4 +3,4 @@
  * Author: Kanno
  */
 
-export { build, define } from './api_impl'
+export { build, define } from './api-impl'
