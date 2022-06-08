@@ -154,10 +154,7 @@ const parserOptions = (defaultOptions: RollupOptions, userOptions: BumpOptions):
   if (!userOptions.plugins) {
     options.plugins = defaultOptions.plugins
   }
-  if (userOptions.preset) {
-    delete options?.preset
-    options.plugins = [...options.plugins!]
-  }
+
   return options as any
 }
 
@@ -180,11 +177,4 @@ const loadConfigFromBundledFile = async (fileName: string, bundledCode: string):
   const config = raw.__esModule ? raw.default : raw
   require.extensions[extension] = defaultLoader
   return config
-}
-
-const loadPreset = (path: string): RollupPlugin[] => {
-  delete require.cache[require.resolve(path)]
-  const { plugins } = require(path)
-  if (plugins) return plugins
-  return []
 }
