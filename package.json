@@ -1,5 +1,5 @@
 {
-  "name": "bump",
+  "name": "no-bump",
   "version": "0.0.1",
   "description": "A zero config bundler.",
   "main": "lib/cjs/index.js",

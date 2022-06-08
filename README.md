@@ -3,15 +3,15 @@
 ### API
 
 ```js
-import { build } from '@fect/bump'
+import { build } from 'no-bump'
 
-build({})
+build()
 ```
 
 ### CLI
 
 ```shell
 
-$ non -c non.config.js -i src/index.js -o dist/index.js
+$ bump
 
 ```
