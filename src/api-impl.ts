@@ -3,19 +3,30 @@ import fs from 'fs'
 import { transform } from '@swc/core'
 import yaml from 'yaml'
 import { universalInput, universalOutput, getUniversalPlugins, PRESET_FORMAT } from './common/universal-conf'
-import { mayBeConfig, isPlainObject, serialize } from './common/utils'
+import { mayBeConfig, isPlainObject, serialize, loadModule } from './common/utils'
 import { exist, readJson } from './common/fs'
-import type { BumpOptions, RollupOptions, ModuleFormat, RollupOutputOptions } from './common/interface'
+import type {
+  BumpOptions,
+  RollupOptions,
+  ModuleFormat,
+  RollupOutputOptions,
+  RollupPlugin,
+  RollupInputOption
+} from './common/interface'
 import path from 'path'
-import { print } from './common/logger'
-// import dts from 'rollup-plugin-dts'
+import { print, throwInvalidateError } from './common/logger'
 import merge from 'lodash.merge'
+
 /**
  *@description dine bump config.
  */
 export const define = (options?: BumpOptions) => options
 
-export const build = (options?: BumpOptions) => buildImpl(options)
+export const build = (options?: BumpOptions) =>
+  buildImpl(options).catch((err) => {
+    print.danger(err.message)
+    process.exit(1)
+  })
 
 export const resolveUserConfig = async (): Promise<BumpOptions> => {
   try {
@@ -43,7 +54,7 @@ export const resolveUserConfig = async (): Promise<BumpOptions> => {
     })
     return await loadConfigFromBundledFile(filePath, code)
   } catch (error) {
-    throw new Error('Please entry uer config')
+    throw new Error('Please entry uesr config')
   }
 }
 
@@ -61,19 +72,31 @@ const buildImpl = async (options?: BumpOptions) => {
     external
   }
   if (options) {
-    try {
-      if (!isPlainObject(options)) throw new Error('[Bump]: please set an object config')
-      optionImpl = parserOptions(optionImpl, options)
-    } catch (error) {
-      if (error instanceof Error) print.danger(error.message)
-      process.exit(1)
-    }
+    if (!isPlainObject(options)) throw throwInvalidateError('[Bump]: please set an object config')
+    optionImpl = parserOptions(optionImpl, options)
   }
   let format = optionImpl.output?.format
   if (!format) format = PRESET_FORMAT
   if (format.length === 0) format = PRESET_FORMAT
+  optionImpl.output!.format = format
 
+  if (optionImpl.output?.dts) {
+    // Tips: when enable this option. We need to determine if the user has typescript installed
+    if (!loadModule('typescript')) {
+      optionImpl.output.dts = false
+      print.log(
+        '[Bump]: If you want to generate declaration file you should insatll typescript in your project and write with typescript :)'
+      )
+    } else {
+      const dts = loadModule('rollup-plugin-dts')
+    }
+  }
   const presetPlugin = getUniversalPlugins(optionImpl.output)
+  try {
+    await runImpl(optionImpl, presetPlugin)
+  } catch (error) {
+    throw error
+  }
 
   //   // @ts-ignore
   //   formats = Array.isArray(formats) ? formats : [formats]
@@ -129,16 +152,54 @@ const buildImpl = async (options?: BumpOptions) => {
 }
 
 /**
+ * @description runImp is use for buildImpl .for future version i plan to add watch
+ * API so needs to realized.
+ */
+
+const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, RollupPlugin>) => {
+  console.log(optionImpl)
+  let { input } = optionImpl
+  if (!Array.isArray(input) && !isPlainObject(input)) input = [(input as string) || universalInput]
+  if (isPlainObject(input)) input = serialize(input as Record<string, any>)
+  if (!input?.length) input = [universalInput]
+  console.log(input)
+  //   try {
+  //     const bundle = await rollup({})
+  //     await bundle.write()
+  //   } catch (error) {
+  //     throw error
+  //   }
+  const { format } = optionImpl.output!
+  console.log(format)
+  const plugins = new Set([serialize(presetPlugins), optionImpl.plugins])
+  console.log(plugins)
+}
+
+/**
  *@description Parser user options and preset options
  */
 const parserOptions = (defaultOptions: BumpOptions, userOptions: BumpOptions): BumpOptions => {
   if (!Object.keys(userOptions)) return defaultOptions
   const options = Object.assign({}, defaultOptions, userOptions, {
-    output: merge({}, defaultOptions.output, userOptions.output),
-    plugins: merge({}, defaultOptions.plugins, userOptions.plugins)
+    output: merge({}, defaultOptions.output, userOptions.output)
   })
 
   return options
+}
+
+interface GeneratorRollupConfig {
+  source: string[]
+  format: ModuleFormat
+  config: BumpOptions
+}
+
+/**
+ * @description generator rollup bundle config for input and output
+ */
+const generatorRollupConfig = async (): Promise<RollupOptions> => {
+  return {
+    //
+  }
 }
 
 interface NodeModuleWithCompile extends NodeModule {

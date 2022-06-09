@@ -3,7 +3,6 @@ import { nodeResolve } from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import postcss from 'rollup-plugin-postcss'
 import json from '@rollup/plugin-json'
-
 import type { RollupPlugin, RollupInputOption, BumpOutputOptions, ModuleFormat } from './interface'
 
 export interface UniversalPluginProps {
@@ -44,7 +43,7 @@ export const getUniversalPlugins = (options: UniversalPluginProps = {}) => {
  * @description preset lib entry
  */
 
-export const universalInput: RollupInputOption = 'src/index.js'
+export const universalInput = 'src/index.js'
 
 /**
  *@default ['cjs','esm']

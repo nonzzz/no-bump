@@ -28,3 +28,13 @@ export const omit = <T, K extends keyof T>(source: T, picks: K[]) =>
 
 export const pick = <T, K extends keyof T>(source: T, picks: K[]) =>
   picks.reduce((acc, cur) => ((acc[cur] = source[cur]), acc), {} as Pick<T, K>)
+
+export const loadModule = (alias: string) => {
+  try {
+    return require(alias)
+  } catch (err) {
+    return false
+  } finally {
+    delete require.cache[require.resolve(alias)]
+  }
+}
