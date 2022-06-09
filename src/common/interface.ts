@@ -48,6 +48,14 @@ export interface BumpOutputOptions {
    * @description Generate declaration file(you should write code with typescript)
    */
   dts?: boolean
+  /**
+   * 
+   *@description Translate your jsx file
+   */
+  jsx?: {
+    pragma: string
+    pragmaFrag?: string
+  }
 }
 
 export interface BumpOptions {

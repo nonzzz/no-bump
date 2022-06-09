@@ -4,3 +4,5 @@
  */
 
 export { build, define } from './api-impl'
+
+export type { BumpOptions, BumpOutputOptions } from './common/interface'

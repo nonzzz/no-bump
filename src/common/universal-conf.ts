@@ -1,18 +1,41 @@
-import { swc, minify } from 'rollup-plugin-swc3'
+import { swc, minify, defineRollupSwcOption } from 'rollup-plugin-swc3'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
+import postcss from 'rollup-plugin-postcss'
 import json from '@rollup/plugin-json'
 
-import type { RollupPlugin, RollupInputOption, BumpOutputOptions } from './interface'
+import type { RollupPlugin, RollupInputOption, BumpOutputOptions, ModuleFormat } from './interface'
 
-export const getUniversalPlugins = (mini?: boolean) => {
+export interface UniversalPluginProps {
+  minifiy?: boolean
+  sourceMap?: boolean
+  extractCss?: boolean
+  jsx?: {
+    pragma?: string
+    pragmaFrag?: string
+  }
+}
+
+export const getUniversalPlugins = (options: UniversalPluginProps = {}) => {
   const draft: Record<string, RollupPlugin> = {
     json: json(),
     common: commonjs({ esmExternals: true }),
     resolve: nodeResolve(),
-    swc: swc()
+    swc: swc(
+      defineRollupSwcOption({
+        sourceMaps: options.sourceMap,
+        jsc: {
+          transform: {
+            react: options.jsx
+          }
+        }
+      })
+    ),
+    postcss: postcss({
+      extract: options.extractCss
+    })
   }
-  if (mini) Reflect.set(draft, 'minify', minify())
+  if (options.minifiy) Reflect.set(draft, 'minify', minify())
   return draft
 }
 
@@ -30,5 +53,9 @@ export const universalInput: RollupInputOption = 'src/index.js'
 
 export const universalOutput: BumpOutputOptions = {
   dir: 'dist',
-  format: ['cjs', 'esm']
+  sourceMap: true,
+  extractCss: true,
+  minifiy: false
 }
+
+export const PRESET_FORMAT: ModuleFormat[] = ['cjs', 'esm']
