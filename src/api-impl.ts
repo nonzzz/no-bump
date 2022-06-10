@@ -80,6 +80,8 @@ const buildImpl = async (options?: BumpOptions) => {
   if (format.length === 0) format = PRESET_FORMAT
   optionImpl.output!.format = format
 
+  const presetPlugin = getUniversalPlugins(optionImpl.output)
+
   if (optionImpl.output?.dts) {
     // Tips: when enable this option. We need to determine if the user has typescript installed
     if (!loadModule('typescript')) {
@@ -89,9 +91,10 @@ const buildImpl = async (options?: BumpOptions) => {
       )
     } else {
       const dts = loadModule('rollup-plugin-dts')
+      presetPlugin[dts] = dts
     }
   }
-  const presetPlugin = getUniversalPlugins(optionImpl.output)
+
   try {
     await runImpl(optionImpl, presetPlugin)
   } catch (error) {
@@ -157,22 +160,62 @@ const buildImpl = async (options?: BumpOptions) => {
  */
 
 const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, RollupPlugin>) => {
-  console.log(optionImpl)
   let { input } = optionImpl
   if (!Array.isArray(input) && !isPlainObject(input)) input = [(input as string) || universalInput]
   if (isPlainObject(input)) input = serialize(input as Record<string, any>)
   if (!input?.length) input = [universalInput]
-  console.log(input)
   //   try {
   //     const bundle = await rollup({})
   //     await bundle.write()
   //   } catch (error) {
   //     throw error
   //   }
-  const { format } = optionImpl.output!
-  console.log(format)
-  const plugins = new Set([serialize(presetPlugins), optionImpl.plugins])
-  console.log(plugins)
+  const formats = optionImpl.output!.format as ModuleFormat[]
+
+  //   user can customlize the plugin sequence.
+  const plugins = {
+    ...presetPlugins
+  }
+  if (optionImpl.plugins && isPlainObject(optionImpl.plugins)) {
+    for (const name in optionImpl.plugins) {
+      const plugin = optionImpl.plugins[name]
+      if (typeof plugin !== 'function') throw throwInvalidateError(`[Bump]: Plugin ${name} export a function.`)
+      Object.assign(plugins, { [name]: plugin })
+    }
+  }
+
+  const inputs = input as string[]
+  const tasks = []
+  for (const source of inputs) {
+    for (const format of formats) {
+      tasks.push({
+        getConfig() {
+          const rollupConfig = generatorRollupConfig({
+            source,
+            format,
+            config: optionImpl,
+            plugins
+          })
+          return rollupConfig
+        }
+      })
+    }
+  }
+  for (const task of tasks) {
+    const config = task.getConfig()
+    console.log(config)
+  }
+
+  await Promise.all(
+    tasks.map(async (task) => {
+      const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
+      const bundle = await rollup(inputConfig)
+      await bundle.write(outputConfig)
+    })
+  )
+
+  //   console.log(plugins)
+  //   , optionImpl.plugins
 }
 
 /**
@@ -188,18 +231,49 @@ const parserOptions = (defaultOptions: BumpOptions, userOptions: BumpOptions): B
 }
 
 interface GeneratorRollupConfig {
-  source: string[]
+  source: string
   format: ModuleFormat
   config: BumpOptions
+  plugins: Record<string, RollupPlugin>
+}
+
+interface GeneratorResult {
+  inputConfig: {
+    input: RollupInputOption
+    plugins: RollupPlugin[]
+    external: any
+  }
+  outputConfig: RollupOutputOptions
 }
 
 /**
  * @description generator rollup bundle config for input and output
  */
-const generatorRollupConfig = async (): Promise<RollupOptions> => {
+const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): GeneratorResult => {
+  const { source, format, config, plugins } = originalConfig
   return {
-    //
+    inputConfig: {
+      input: source,
+      plugins: serialize(plugins),
+      external: config.external!
+    },
+    outputConfig: {
+      format,
+      exports: 'auto',
+      dir: config.output?.dir
+    }
   }
+  //   console.log(config)
+  //   return {
+  //     inputConfig: {
+  //       input: source,
+  //       output: {
+  //         format,
+  //         exports: 'auto'
+  //       },
+  //       plugins: serialize(plugins)
+  //     }
+  //   }
 }
 
 interface NodeModuleWithCompile extends NodeModule {

@@ -49,7 +49,7 @@ export interface BumpOutputOptions {
    */
   dts?: boolean
   /**
-   * 
+   *
    *@description Translate your jsx file
    */
   jsx?: {
@@ -67,7 +67,7 @@ export interface BumpOptions {
   output?: BumpOutputOptions
   external?: ExternalOption
   global?: Record<string, string>
-  plugins?: RollupPlugin[]
+  plugins?: Record<string, RollupPlugin>
 }
 
 export { RollupPlugin, RollupInputOption, RollupOptions, ModuleFormat, OutputOptions as RollupOutputOptions }
