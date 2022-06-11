@@ -100,58 +100,6 @@ const buildImpl = async (options?: BumpOptions) => {
   } catch (error) {
     throw error
   }
-
-  //   // @ts-ignore
-  //   formats = Array.isArray(formats) ? formats : [formats]
-
-  //   if (formats?.includes('umd') && isPlainObject(optionImpl?.output)) {
-  //     const hasName = Boolean((optionImpl.output as RollupOutputOptions).name)
-  //     if (!hasName) {
-  //       // @ts-ignore
-  //       formats = formats.filter((format) => format !== 'umd')
-  //       print.tip("[Bump]: Can'found name with umd format.Please check it exist.")
-  //     }
-  //   }
-
-  //   try {
-  //     const bundle = await rollup({
-  //       input: optionImpl.input,
-  //       // @ts-nocheck
-  //       plugins: optionImpl.plugins,
-  //       external: optionImpl.external
-  //     })
-
-  //     await Promise.all(
-  //       (formats as ModuleFormat[]).map((format) =>
-  //         bundle.write({
-  //           dir: getDestPath(format),
-  //           format,
-  //           exports: 'auto'
-  //         })
-  //       )
-  //     )
-
-  //     // if (options?.output?.dts) {
-  //     //   const inputs = Array.isArray(optionImpl.input)
-  //     //     ? optionImpl.input
-  //     //     : isPlainObject(optionImpl.input)
-  //     //     ? serialize(optionImpl.input as Record<string, string>)
-  //     //     : [optionImpl.input as string]
-
-  //     //   const bundle = await rollup({
-  //     //     input: inputs,
-  //     //     plugins: [dts()]
-  //     //   })
-  //     //   bundle.write({
-  //     //     dir: 'types'
-  //     //   })
-  //     // }
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       print.danger(error.message)
-  //       process.exit(1)
-  //     }
-  //   }
 }
 
 /**
@@ -164,12 +112,6 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
   if (!Array.isArray(input) && !isPlainObject(input)) input = [(input as string) || universalInput]
   if (isPlainObject(input)) input = serialize(input as Record<string, any>)
   if (!input?.length) input = [universalInput]
-  //   try {
-  //     const bundle = await rollup({})
-  //     await bundle.write()
-  //   } catch (error) {
-  //     throw error
-  //   }
   const formats = optionImpl.output!.format as ModuleFormat[]
 
   //   user can customlize the plugin sequence.
@@ -183,6 +125,12 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
       Object.assign(plugins, { [name]: plugin })
     }
   }
+
+  /**
+   * Input parseing rules.
+   * We should translate user input as array. when user define a object array. we think it's mulitple
+   * tasks mulit-entry.
+   */
 
   const inputs = input as string[]
   const tasks = []
@@ -201,11 +149,6 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
       })
     }
   }
-  for (const task of tasks) {
-    const config = task.getConfig()
-    console.log(config)
-  }
-
   await Promise.all(
     tasks.map(async (task) => {
       const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
@@ -213,9 +156,6 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
       await bundle.write(outputConfig)
     })
   )
-
-  //   console.log(plugins)
-  //   , optionImpl.plugins
 }
 
 /**
@@ -246,11 +186,20 @@ interface GeneratorResult {
   outputConfig: RollupOutputOptions
 }
 
+const getDefaultFileName = (format: ModuleFormat) =>
+  format === 'cjs' ? `[name][min][ext]` : `[name].[format][min][ext]`
+
 /**
  * @description generator rollup bundle config for input and output
  */
 const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): GeneratorResult => {
   const { source, format, config, plugins } = originalConfig
+
+  const defaultFileName = getDefaultFileName(format)
+  let fileName = defaultFileName.replace(/\[min\]/, config.output?.minifiy ? '.min' : '').replace(/\[ext\]/, '.js')
+
+  if (format === 'esm') fileName = fileName.replace(/\[format\]/, 'esm')
+
   return {
     inputConfig: {
       input: source,
@@ -260,20 +209,11 @@ const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): Generator
     outputConfig: {
       format,
       exports: 'auto',
-      dir: config.output?.dir
+      entryFileNames: fileName,
+      dir: config.output?.dir,
+      sourcemap: config.output?.sourceMap
     }
   }
-  //   console.log(config)
-  //   return {
-  //     inputConfig: {
-  //       input: source,
-  //       output: {
-  //         format,
-  //         exports: 'auto'
-  //       },
-  //       plugins: serialize(plugins)
-  //     }
-  //   }
 }
 
 interface NodeModuleWithCompile extends NodeModule {

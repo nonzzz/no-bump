@@ -7,6 +7,8 @@ import type {
   ExternalOption
 } from 'rollup'
 
+export type BumpInputOption = RollupInputOption | Record<string, string[]>
+
 export interface BumpOutputOptions {
   /**
    * @default `['esm','cjs']`
@@ -63,7 +65,7 @@ export interface BumpOptions {
    * @default `src/index.js`
    * @description Input files
    */
-  input?: RollupInputOption
+  input?: BumpInputOption
   output?: BumpOutputOptions
   external?: ExternalOption
   global?: Record<string, string>

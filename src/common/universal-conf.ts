@@ -15,6 +15,11 @@ export interface UniversalPluginProps {
   }
 }
 
+/**
+ * @description rollup-plguin-swc
+ * https://github.com/SukkaW/rollup-plugin-swc/issues/11
+ */
+
 export const getUniversalPlugins = (options: UniversalPluginProps = {}) => {
   const draft: Record<string, RollupPlugin> = {
     json: json(),
@@ -34,7 +39,14 @@ export const getUniversalPlugins = (options: UniversalPluginProps = {}) => {
       extract: options.extractCss
     })
   }
-  if (options.minifiy) Reflect.set(draft, 'minify', minify())
+  if (options.minifiy)
+    Reflect.set(
+      draft,
+      'minify',
+      minify({
+        sourceMap: options.sourceMap
+      })
+    )
   return draft
 }
 

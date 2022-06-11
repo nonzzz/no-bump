@@ -18,7 +18,7 @@ const BASIC_TYPES = {
 
 const getUniversalType = (tar: unknown): string => Object.prototype.toString.call(tar).slice(8, -1)
 
-export const isPlainObject = (tar: unknown) => getUniversalType(tar) === BASIC_TYPES.Object
+export const isPlainObject = <T>(tar: unknown): tar is T => getUniversalType(tar) === BASIC_TYPES.Object
 
 export const omit = <T, K extends keyof T>(source: T, picks: K[]) =>
   (Object.keys(source) as K[]).reduce(
