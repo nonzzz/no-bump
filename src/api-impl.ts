@@ -79,7 +79,6 @@ const buildImpl = async (options?: BumpOptions) => {
   if (!format) format = PRESET_FORMAT
   if (format.length === 0) format = PRESET_FORMAT
   optionImpl.output!.format = format
-
   const presetPlugin = getUniversalPlugins(optionImpl.output)
 
   /**
@@ -115,7 +114,6 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
   if (isPlainObject(input)) input = serialize(input as Record<string, any>)
   if (!input?.length) input = [universalInput]
   const formats = optionImpl.output!.format as ModuleFormat[]
-
   //   user can customlize the plugin sequence.
   const plugins = {
     ...presetPlugins
@@ -235,7 +233,9 @@ const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): Generator
       dir: config.output?.dir,
       sourcemap: config.output?.sourceMap,
       globals: config.global,
-      name: config.output?.name
+      name: config.output?.name,
+      preserveModules: config.output?.preserveModules,
+      preserveModulesRoot: config.output?.preserveModulesRoot
     }
   }
 }

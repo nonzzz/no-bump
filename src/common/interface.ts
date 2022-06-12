@@ -64,6 +64,11 @@ export interface BumpOutputOptions {
    * @description iffe and umd module bundle name.
    */
   name?: string
+  /**
+   * @description see: https://rollupjs.org/guide/en/#outputpreservemodules
+   */
+  preserveModules?: boolean
+  preserveModulesRoot?: string
 }
 
 export interface BumpOptions {

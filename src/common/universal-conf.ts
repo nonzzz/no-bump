@@ -3,7 +3,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import postcss from 'rollup-plugin-postcss'
 import json from '@rollup/plugin-json'
-import type { RollupPlugin, RollupInputOption, BumpOutputOptions, ModuleFormat } from './interface'
+import type { RollupPlugin, BumpOutputOptions, ModuleFormat } from './interface'
 
 export interface UniversalPluginProps {
   minifiy?: boolean
@@ -66,7 +66,8 @@ export const universalOutput: BumpOutputOptions = {
   dir: 'dist',
   sourceMap: true,
   extractCss: true,
-  minifiy: false
+  minifiy: false,
+  preserveModules: false
 }
 
 export const PRESET_FORMAT: ModuleFormat[] = ['cjs', 'esm']
