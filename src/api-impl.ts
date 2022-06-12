@@ -7,7 +7,6 @@ import { mayBeConfig, isPlainObject, serialize, loadModule, omit } from './commo
 import { exist, readJson } from './common/fs'
 import type {
   BumpOptions,
-  RollupOptions,
   ModuleFormat,
   RollupOutputOptions,
   RollupPlugin,
