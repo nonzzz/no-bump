@@ -9,6 +9,8 @@ import type {
 
 export type BumpInputOption = RollupInputOption | Record<string, string[]>
 
+export type GetFileName = (context: { format: ModuleFormat; minify: boolean }, originalFileName: string) => string
+
 export interface BumpOutputOptions {
   /**
    * @default `['esm','cjs']`
@@ -29,7 +31,7 @@ export interface BumpOutputOptions {
    * -  `[name][min].[format][ext]` with others
    *
    */
-  file?: string
+  file?: string | GetFileName
   /**
    * @default `false`
    * @description Compressed the bundle result.
@@ -58,6 +60,10 @@ export interface BumpOutputOptions {
     pragma: string
     pragmaFrag?: string
   }
+  /**
+   * @description iffe and umd module bundle name.
+   */
+  name?: string
 }
 
 export interface BumpOptions {

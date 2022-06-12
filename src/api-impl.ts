@@ -3,7 +3,7 @@ import fs from 'fs'
 import { transform } from '@swc/core'
 import yaml from 'yaml'
 import { universalInput, universalOutput, getUniversalPlugins, PRESET_FORMAT } from './common/universal-conf'
-import { mayBeConfig, isPlainObject, serialize, loadModule } from './common/utils'
+import { mayBeConfig, isPlainObject, serialize, loadModule, omit } from './common/utils'
 import { exist, readJson } from './common/fs'
 import type {
   BumpOptions,
@@ -82,6 +82,11 @@ const buildImpl = async (options?: BumpOptions) => {
 
   const presetPlugin = getUniversalPlugins(optionImpl.output)
 
+  /**
+   * Because dts plugin will overwrites the out. so we
+   * only change value of dts to judge we should or not
+   * load the dts module plugin.
+   */
   if (optionImpl.output?.dts) {
     // Tips: when enable this option. We need to determine if the user has typescript installed
     if (!loadModule('typescript')) {
@@ -89,9 +94,6 @@ const buildImpl = async (options?: BumpOptions) => {
       print.log(
         '[Bump]: If you want to generate declaration file you should insatll typescript in your project and write with typescript :)'
       )
-    } else {
-      const dts = loadModule('rollup-plugin-dts')
-      presetPlugin[dts] = dts
     }
   }
 
@@ -125,7 +127,6 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
       Object.assign(plugins, { [name]: plugin })
     }
   }
-
   /**
    * Input parseing rules.
    * We should translate user input as array. when user define a object array. we think it's mulitple
@@ -149,6 +150,7 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
       })
     }
   }
+
   await Promise.all(
     tasks.map(async (task) => {
       const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
@@ -156,6 +158,22 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
       await bundle.write(outputConfig)
     })
   )
+
+  if (optionImpl.output?.dts) {
+    const dts = loadModule('rollup-plugin-dts')()
+    const plugins = [dts]
+    // I should get all entryFileNames as input chunk.
+    await Promise.all(
+      tasks.map(async (task) => {
+        const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
+        const bundle = await rollup({
+          ...inputConfig,
+          plugins
+        })
+        await bundle.write(omit(outputConfig, ['entryFileNames']))
+      })
+    )
+  }
 }
 
 /**
@@ -186,19 +204,23 @@ interface GeneratorResult {
   outputConfig: RollupOutputOptions
 }
 
-const getDefaultFileName = (format: ModuleFormat) =>
-  format === 'cjs' ? `[name][min][ext]` : `[name].[format][min][ext]`
-
 /**
  * @description generator rollup bundle config for input and output
  */
 const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): GeneratorResult => {
   const { source, format, config, plugins } = originalConfig
 
-  const defaultFileName = getDefaultFileName(format)
-  let fileName = defaultFileName.replace(/\[min\]/, config.output?.minifiy ? '.min' : '').replace(/\[ext\]/, '.js')
+  const fileNameRule = '[name].[format][min][ext]'
+  const fileName = config.output?.file || fileNameRule
 
-  if (format === 'esm') fileName = fileName.replace(/\[format\]/, 'esm')
+  let fileNameTemplate =
+    typeof fileName === 'function'
+      ? fileName({ format, minify: Boolean(config.output?.minifiy) }, fileNameRule)
+      : fileName
+  fileNameTemplate = fileNameTemplate
+    .replace(/\[min\]/, config.output?.minifiy ? '.min' : '')
+    .replace(/\[ext\]/, '.js')
+    .replace(/\[format\]/, format)
 
   return {
     inputConfig: {
@@ -209,9 +231,11 @@ const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): Generator
     outputConfig: {
       format,
       exports: 'auto',
-      entryFileNames: fileName,
+      entryFileNames: fileNameTemplate,
       dir: config.output?.dir,
-      sourcemap: config.output?.sourceMap
+      sourcemap: config.output?.sourceMap,
+      globals: config.global,
+      name: config.output?.name
     }
   }
 }

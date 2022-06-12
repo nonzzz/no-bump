@@ -31,7 +31,8 @@ export const pick = <T, K extends keyof T>(source: T, picks: K[]) =>
 
 export const loadModule = (alias: string) => {
   try {
-    return require(alias)
+    const raw = require(alias)
+    return raw.__esModule ? raw.default : raw
   } catch (err) {
     return false
   } finally {
