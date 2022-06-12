@@ -1,18 +1,17 @@
 {
   "name": "no-bump",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A zero config bundler.",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "rm -rf lib types && ts-node src/cli.ts"
+    "build": "rm -rf lib && ts-node src/cli.ts"
   },
   "bin": {
     "bump": "./bin/bump.js"
   },
   "files": [
-    "types",
     "README.md",
     "lib",
     "bin"
