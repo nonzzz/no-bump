@@ -117,10 +117,14 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
   const plugins = {
     ...presetPlugins
   }
+
+  //   hack: Rollup plugin or Vite plugin must have named.
   if (optionImpl.plugins && isPlainObject(optionImpl.plugins)) {
     for (const name in optionImpl.plugins) {
-      const plugin = optionImpl.plugins[name]
-      if (typeof plugin !== 'function') throw throwInvalidateError(`[Bump]: Plugin ${name} export a function.`)
+      let plugin = optionImpl.plugins[name]
+      if (typeof plugin === 'function') plugin = (plugin as Function).call(plugin)
+      if (isPlainObject(plugin) && !plugin.name)
+        throw throwInvalidateError(`[Bump]: Plugin ${name} not a standard rollup or vite plugin.`)
       Object.assign(plugins, { [name]: plugin })
     }
   }

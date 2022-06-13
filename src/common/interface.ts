@@ -69,6 +69,11 @@ export interface BumpOutputOptions {
    */
   preserveModules?: boolean
   preserveModulesRoot?: string
+  /**
+   * @description Use `@swc/helpers` instead of inline helpers.
+   * Default `true`
+   */
+  extractHelpers?: boolean
 }
 
 export interface BumpOptions {

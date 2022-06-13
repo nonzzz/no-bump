@@ -13,6 +13,7 @@ export interface UniversalPluginProps {
     pragma?: string
     pragmaFrag?: string
   }
+  extractHelpers?: boolean
 }
 
 /**
@@ -31,7 +32,8 @@ export const getUniversalPlugins = (options: UniversalPluginProps = {}) => {
         jsc: {
           transform: {
             react: options.jsx
-          }
+          },
+          externalHelpers: options.extractHelpers
         }
       })
     ),
@@ -67,7 +69,8 @@ export const universalOutput: BumpOutputOptions = {
   sourceMap: true,
   extractCss: true,
   minifiy: false,
-  preserveModules: false
+  preserveModules: false,
+  extractHelpers: true
 }
 
 export const PRESET_FORMAT: ModuleFormat[] = ['cjs', 'esm']
