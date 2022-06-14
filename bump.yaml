@@ -1,8 +1,0 @@
-input:
-  index: 'src/index.ts'
-  cli: 'src/cli.ts'
-output:
-  dir: lib
-  format: ['esm', 'cjs']
-  sourceMap: false
-  dts: true

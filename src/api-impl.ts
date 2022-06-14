@@ -37,6 +37,7 @@ export const resolveUserConfig = async (): Promise<BumpOptions> => {
         break
       }
     }
+    if (!filePath) return {}
     //   we can resolve yaml conf
     const file = await fs.promises.readFile(filePath, 'utf-8')
     if (['.yaml', '.yml'].includes(path.extname(filePath))) {
@@ -52,8 +53,8 @@ export const resolveUserConfig = async (): Promise<BumpOptions> => {
       }
     })
     return await loadConfigFromBundledFile(filePath, code)
-  } catch (error) {
-    throw new Error('Please entry uesr config')
+  } catch (err) {
+    throw throwInvalidateError(err as any)
   }
 }
 
