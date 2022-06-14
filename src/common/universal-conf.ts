@@ -79,7 +79,8 @@ export const universalOutput: BumpOutputOptions = {
   extractCss: true,
   minifiy: false,
   preserveModules: false,
-  extractHelpers: true
+  extractHelpers: true,
+  exports: 'auto'
 }
 
 export const PRESET_FORMAT: ModuleFormat[] = ['cjs', 'esm']

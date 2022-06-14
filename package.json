@@ -6,7 +6,8 @@
   "module": "lib/index.esm.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "rm -rf lib && ts-node src/cli.ts"
+    "build": "rm -rf lib && ts-node src/cli.ts",
+    "dev": "ts-node build.ts"
   },
   "bin": {
     "bump": "./bin/bump.js"

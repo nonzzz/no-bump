@@ -78,6 +78,7 @@ export interface BumpOutputOptions {
    * Default `true`
    */
   extractHelpers?: boolean
+  exports?: 'default' | 'named' | 'none' | 'auto'
 }
 
 export interface BumpInternalPlugins {

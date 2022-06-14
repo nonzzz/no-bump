@@ -1,4 +1,4 @@
-import { rollup } from 'rollup'
+import { rollup, watch } from 'rollup'
 import fs from 'fs'
 import { transform } from '@swc/core'
 import yaml from 'yaml'
@@ -20,6 +20,26 @@ import merge from 'lodash.merge'
  *@description dine bump config.
  */
 export const define = (options?: BumpOptions) => options
+
+/**
+ *@description create a bundle configuration exports watch and build api
+ * Example:
+ *  plugins: `Record<string,RollupPlugin>`
+ */
+export const createBundle = (options?: Omit<BumpOptions, 'input' | 'output'>) => {
+  return {
+    build(conf?: Pick<BumpOptions, 'input' | 'output'>) {
+      return buildImpl(merge(conf, options), {
+        watch: false
+      })
+    },
+    watch(conf?: Pick<BumpOptions, 'input' | 'output'>) {
+      return buildImpl(merge(conf, options), {
+        watch: true
+      })
+    }
+  }
+}
 
 export const build = (options?: BumpOptions) =>
   buildImpl(options).catch((err) => {
@@ -64,7 +84,7 @@ const defaultExternal = async () => {
   return Object.keys({ ...dependencies, ...peerDependencies })
 }
 
-const buildImpl = async (options?: BumpOptions) => {
+const buildImpl = async (options?: BumpOptions, extraOptions?: Record<string, unknown>) => {
   const external = await defaultExternal()
   let optionImpl: BumpOptions = {
     input: universalInput,
@@ -78,26 +98,28 @@ const buildImpl = async (options?: BumpOptions) => {
   let format = optionImpl.output?.format
   if (!format) format = PRESET_FORMAT
   if (format.length === 0) format = PRESET_FORMAT
-  optionImpl.output!.format = format
-  const presetPlugin = getUniversalPlugins(optionImpl.output, optionImpl?.internalPlugins)
-
-  /**
-   * Because dts plugin will overwrites the out. so we
-   * only change value of dts to judge we should or not
-   * load the dts module plugin.
-   */
-  if (optionImpl.output?.dts) {
-    // Tips: when enable this option. We need to determine if the user has typescript installed
-    if (!loadModule('typescript')) {
-      optionImpl.output.dts = false
-      print.log(
-        '[Bump]: If you want to generate declaration file you should insatll typescript in your project and write with typescript :)'
-      )
+  optionImpl.output!.format = Array.isArray(format) ? format : [format]
+  const presetPlugin = {}
+  if (!extraOptions) {
+    Object.assign(presetPlugin, getUniversalPlugins(optionImpl.output, optionImpl?.internalPlugins))
+    /**
+     * Because dts plugin will overwrites the out. so we
+     * only change value of dts to judge we should or not
+     * load the dts module plugin.
+     */
+    if (optionImpl.output?.dts) {
+      // Tips: when enable this option. We need to determine if the user has typescript installed
+      if (!loadModule('typescript')) {
+        optionImpl.output.dts = false
+        print.log(
+          '[Bump]: If you want to generate declaration file you should insatll typescript in your project and write with typescript :)'
+        )
+      }
     }
   }
 
   try {
-    await runImpl(optionImpl, presetPlugin)
+    await runImpl(optionImpl, presetPlugin, extraOptions)
   } catch (error) {
     throw error
   }
@@ -108,7 +130,11 @@ const buildImpl = async (options?: BumpOptions) => {
  * API so needs to realized.
  */
 
-const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, RollupPlugin>) => {
+const runImpl = async (
+  optionImpl: BumpOptions,
+  presetPlugins: Record<string, RollupPlugin>,
+  extraOptions?: Record<string, unknown>
+) => {
   let { input } = optionImpl
   if (!Array.isArray(input) && !isPlainObject(input)) input = [(input as string) || universalInput]
   if (isPlainObject(input)) input = serialize(input as Record<string, any>)
@@ -152,16 +178,7 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
       })
     }
   }
-
-  await Promise.all(
-    tasks.map(async (task) => {
-      const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
-      const bundle = await rollup(inputConfig)
-      await bundle.write(outputConfig)
-    })
-  )
-
-  if (optionImpl.output?.dts) {
+  if (optionImpl.output?.dts && !extraOptions) {
     const dts = loadModule('rollup-plugin-dts')()
     const plugins = [dts]
     // I should get all entryFileNames as input chunk.
@@ -173,6 +190,32 @@ const runImpl = async (optionImpl: BumpOptions, presetPlugins: Record<string, Ro
           plugins
         })
         await bundle.write(omit(outputConfig, ['entryFileNames']))
+      })
+    )
+  }
+  if (extraOptions?.watch) {
+    const configs = await Promise.all(
+      tasks.map(async (task) => {
+        const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
+        return {
+          ...inputConfig,
+          output: outputConfig,
+          watch: {}
+        }
+      })
+    )
+    const watcher = watch(configs)
+    watcher.on('event', (e) => {
+      if (e.code === 'ERROR') {
+        print.danger(e.error.message)
+      }
+    })
+  } else {
+    await Promise.all(
+      tasks.map(async (task) => {
+        const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
+        const bundle = await rollup(inputConfig)
+        await bundle.write(outputConfig)
       })
     )
   }
@@ -232,7 +275,7 @@ const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): Generator
     },
     outputConfig: {
       format,
-      exports: 'auto',
+      exports: config.output?.exports,
       entryFileNames: fileNameTemplate,
       dir: config.output?.dir,
       sourcemap: config.output?.sourceMap,
