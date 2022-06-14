@@ -78,7 +78,7 @@ const buildImpl = async (options?: BumpOptions) => {
   if (!format) format = PRESET_FORMAT
   if (format.length === 0) format = PRESET_FORMAT
   optionImpl.output!.format = format
-  const presetPlugin = getUniversalPlugins(optionImpl.output)
+  const presetPlugin = getUniversalPlugins(optionImpl.output, optionImpl?.internalPlugins)
 
   /**
    * Because dts plugin will overwrites the out. so we

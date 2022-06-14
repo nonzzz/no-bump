@@ -2,8 +2,8 @@ import { swc, minify, defineRollupSwcOption } from 'rollup-plugin-swc3'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import postcss from 'rollup-plugin-postcss'
-import json from '@rollup/plugin-json'
-import type { RollupPlugin, BumpOutputOptions, ModuleFormat } from './interface'
+import type { RollupPlugin, BumpOutputOptions, ModuleFormat, BumpInternalPlugins } from './interface'
+import merge from 'lodash.merge'
 
 export interface UniversalPluginProps {
   minifiy?: boolean
@@ -21,25 +21,34 @@ export interface UniversalPluginProps {
  * https://github.com/SukkaW/rollup-plugin-swc/issues/11
  */
 
-export const getUniversalPlugins = (options: UniversalPluginProps = {}) => {
+export const getUniversalPlugins = (options: UniversalPluginProps = {}, internalPlugins?: BumpInternalPlugins) => {
   const draft: Record<string, RollupPlugin> = {
-    json: json(),
-    common: commonjs({ esmExternals: true }),
-    resolve: nodeResolve(),
+    commonjs: commonjs(merge({ esmExternals: true }, internalPlugins?.commonjs)),
+    nodeResolve: nodeResolve(internalPlugins?.nodeResolve),
     swc: swc(
-      defineRollupSwcOption({
-        sourceMaps: options.sourceMap,
-        jsc: {
-          transform: {
-            react: options.jsx
+      defineRollupSwcOption(
+        merge(
+          {
+            sourceMaps: options.sourceMap,
+            jsc: {
+              transform: {
+                react: options.jsx
+              },
+              externalHelpers: options.extractHelpers
+            }
           },
-          externalHelpers: options.extractHelpers
-        }
-      })
+          internalPlugins?.swc
+        )
+      )
     ),
-    postcss: postcss({
-      extract: options.extractCss
-    })
+    postcss: postcss(
+      merge(
+        {
+          extract: options.extractCss
+        },
+        internalPlugins?.postcss
+      )
+    )
   }
   if (options.minifiy)
     Reflect.set(

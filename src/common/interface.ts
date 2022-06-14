@@ -1,3 +1,5 @@
+import type { RollupCommonJSOptions } from '@rollup/plugin-commonjs'
+import { RollupNodeResolveOptions } from '@rollup/plugin-node-resolve'
 import type {
   RollupOptions,
   Plugin as RollupPlugin,
@@ -6,6 +8,8 @@ import type {
   ModuleFormat,
   ExternalOption
 } from 'rollup'
+import type { PostCSSPluginConf as RollupPostCssOptions } from 'rollup-plugin-postcss'
+import type { PluginOptions as RollupSwcOptions } from 'rollup-plugin-swc3'
 
 export type BumpInputOption = RollupInputOption | Record<string, string[]>
 
@@ -76,6 +80,13 @@ export interface BumpOutputOptions {
   extractHelpers?: boolean
 }
 
+export interface BumpInternalPlugins {
+  commonjs?: RollupCommonJSOptions
+  nodeResolve?: RollupNodeResolveOptions
+  swc?: RollupSwcOptions
+  postcss?: RollupPostCssOptions
+}
+
 export interface BumpOptions {
   /**
    * @default `src/index.js`
@@ -86,6 +97,7 @@ export interface BumpOptions {
   external?: ExternalOption
   global?: Record<string, string>
   plugins?: Record<string, RollupPlugin>
+  internalPlugins?: BumpInternalPlugins
 }
 
 export { RollupPlugin, RollupInputOption, RollupOptions, ModuleFormat, OutputOptions as RollupOutputOptions }
