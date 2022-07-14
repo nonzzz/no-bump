@@ -82,13 +82,22 @@ export interface BumpOutputOptions {
 }
 
 export interface BumpResolveOptions {
+  /**
+   * @description Define string in files will be replacing while bundling.
+   */
   define?: Record<string, string | (() => string)>
+  /**
+   * @description Define alias.
+   */
   alias?:
     | Record<string, string>
     | Array<{
         find: string | RegExp
         replacement: string
       }>
+  /**
+   * @description file extenions
+   */
   extensions?: string[]
 }
 

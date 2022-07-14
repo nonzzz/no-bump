@@ -1,10 +1,7 @@
 import { rollup, watch } from 'rollup'
-import fs from 'fs'
-import { transform } from '@swc/core'
-import yaml from 'yaml'
 import { universalInput, universalOutput, getUniversalPlugins, PRESET_FORMAT } from './common/universal-conf'
-import { mayBeConfig, isPlainObject, serialize, loadModule, omit } from './common/utils'
-import { exist, readJson } from './common/fs'
+import { isPlainObject, serialize, loadModule, omit } from './common/utils'
+import { readJson } from './common/fs'
 import type {
   BumpOptions,
   ModuleFormat,
@@ -46,37 +43,6 @@ export const build = (options?: BumpOptions) =>
     print.danger(err.message)
     process.exit(1)
   })
-
-export const resolveUserConfig = async (): Promise<BumpOptions> => {
-  try {
-    let filePath = ''
-    for (const p of mayBeConfig) {
-      const full = path.resolve(process.cwd(), p)
-      if (await exist(full)) {
-        filePath = full
-        break
-      }
-    }
-    if (!filePath) return {}
-    //   we can resolve yaml conf
-    const file = await fs.promises.readFile(filePath, 'utf-8')
-    if (['.yaml', '.yml'].includes(path.extname(filePath))) {
-      return yaml.parse(file) as BumpOptions
-    }
-    //   javaScript or typeScript lang.
-    const { code } = await transform(file, {
-      filename: filePath,
-      isModule: 'unknown',
-      sourceMaps: false,
-      module: {
-        type: 'commonjs'
-      }
-    })
-    return await loadConfigFromBundledFile(filePath, code)
-  } catch (err) {
-    throw throwInvalidateError(err as any)
-  }
-}
 
 const defaultExternal = async () => {
   const tar = path.join(process.cwd(), 'package.json')
@@ -285,25 +251,4 @@ const generatorRollupConfig = (originalConfig: GeneratorRollupConfig): Generator
       preserveModulesRoot: config.output?.preserveModulesRoot
     }
   }
-}
-
-interface NodeModuleWithCompile extends NodeModule {
-  _compile(code: string, filename: string): any
-}
-
-const loadConfigFromBundledFile = async (fileName: string, bundledCode: string): Promise<BumpOptions> => {
-  const extension = path.extname(fileName)
-  const defaultLoader = require.extensions[extension]!
-  require.extensions[extension] = (module: NodeModule, filename: string) => {
-    if (filename === fileName) {
-      ;(module as NodeModuleWithCompile)._compile(bundledCode, filename)
-    } else {
-      defaultLoader(module, filename)
-    }
-  }
-  delete require.cache[require.resolve(fileName)]
-  const raw = require(fileName)
-  const config = raw.__esModule ? raw.default : raw
-  require.extensions[extension] = defaultLoader
-  return config
 }
