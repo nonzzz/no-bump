@@ -119,7 +119,17 @@ export interface BumpOptions {
   external?: ExternalOption
   global?: Record<string, string>
   plugins?: Record<string, RollupPlugin>
+  /**
+   * @deprecated Please use `internalOptions` instead.
+   * @description Internal plugins otpions
+   */
   internalPlugins?: BumpInternalPlugins
+  /**
+   * @description set bump internal plugins options
+   */
+  internalOptions?: {
+    plugins?: BumpInternalPlugins
+  }
 }
 
 export { RollupPlugin, RollupInputOption, RollupOptions, ModuleFormat, OutputOptions as RollupOutputOptions }
