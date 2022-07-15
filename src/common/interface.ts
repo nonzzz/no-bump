@@ -81,6 +81,26 @@ export interface BumpOutputOptions {
   exports?: 'default' | 'named' | 'none' | 'auto'
 }
 
+export interface BumpResolveOptions {
+  /**
+   * @description Define string in files will be replacing while bundling.
+   */
+  define?: Record<string, string | (() => string)>
+  /**
+   * @description Define alias.
+   */
+  alias?:
+    | Record<string, string>
+    | Array<{
+        find: string | RegExp
+        replacement: string
+      }>
+  /**
+   * @description file extenions
+   */
+  extensions?: string[]
+}
+
 export interface BumpInternalPlugins {
   commonjs?: RollupCommonJSOptions
   nodeResolve?: RollupNodeResolveOptions
@@ -95,10 +115,21 @@ export interface BumpOptions {
    */
   input?: BumpInputOption
   output?: BumpOutputOptions
+  resolve?: BumpResolveOptions
   external?: ExternalOption
   global?: Record<string, string>
   plugins?: Record<string, RollupPlugin>
+  /**
+   * @deprecated Please use `internalOptions` instead.
+   * @description Internal plugins otpions
+   */
   internalPlugins?: BumpInternalPlugins
+  /**
+   * @description set bump internal plugins options
+   */
+  internalOptions?: {
+    plugins?: BumpInternalPlugins
+  }
 }
 
 export { RollupPlugin, RollupInputOption, RollupOptions, ModuleFormat, OutputOptions as RollupOutputOptions }

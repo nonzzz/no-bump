@@ -1,7 +1,6 @@
 export const serialize = <T>(source: Record<string, T>): T[] => Object.values(source)
 
-// If the user does not have too many configuration options, the yaml file can be used
-export const mayBeConfig = ['bump.config.js', 'bump.config.ts', 'bump.yml', 'bump.yaml']
+export const configFiles = ['bump.config.js', 'bump.config.ts']
 
 const BASIC_TYPES = {
   Null: 'Null',
@@ -26,9 +25,6 @@ export const omit = <T, K extends keyof T>(source: T, picks: K[]) =>
     {} as Omit<T, K>
   )
 
-export const pick = <T, K extends keyof T>(source: T, picks: K[]) =>
-  picks.reduce((acc, cur) => ((acc[cur] = source[cur]), acc), {} as Pick<T, K>)
-
 export const loadModule = (alias: string) => {
   try {
     const raw = require(alias)
@@ -39,3 +35,5 @@ export const loadModule = (alias: string) => {
     delete require.cache[require.resolve(alias)]
   }
 }
+
+export const len = (tar: string | unknown[]) => tar.length
