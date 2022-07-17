@@ -58,13 +58,25 @@ const buildImpl = async (options?: BumpOptions, extraOptions?: Record<string, un
     if (!isPlainObject(options)) throw throwInvalidateError('[Bump]: please set an object config')
     optionImpl = parserOptions(optionImpl, options)
   }
-  const format = optionImpl.output?.format
-  if (!format || (Array.isArray(format) && !len(format))) {
-    optionImpl.output = {
-      ...optionImpl.output,
-      format: PRESET_FORMAT
-    }
+  const getFormat = (userForamt?: ModuleFormat | ModuleFormat[] | undefined): ModuleFormat[] => {
+    if (!userForamt || (Array.isArray(userForamt) && !len(userForamt))) return PRESET_FORMAT
+    return Array.isArray(userForamt) ? userForamt : [userForamt]
   }
+
+  const unite = (formats: ModuleFormat[]) => {
+    return formats.map((item) => {
+      if (item === 'commonjs') return 'cjs'
+      if (item === 'es') return 'esm'
+      return item
+    })
+  }
+
+  optionImpl.output = {
+    ...optionImpl.output,
+    format: unite(getFormat(optionImpl.output?.format))
+  }
+
+  debugger
 
   /**
    * Because dts plugin will overwrites the out. so we
@@ -102,7 +114,7 @@ const runImpl = async (optionImpl: BumpOptions, plugins: RollupPlugin[], extraOp
   let { input } = optionImpl
   if (!Array.isArray(input) && !isPlainObject(input)) input = [(input as string) || universalInput]
   if (isPlainObject(input)) input = serialize(input as Record<string, any>)
-  if (!input?.length) input = [universalInput]
+  if (!len(input)) input = [universalInput]
   const formats = optionImpl.output!.format as ModuleFormat[]
 
   /**
@@ -112,9 +124,12 @@ const runImpl = async (optionImpl: BumpOptions, plugins: RollupPlugin[], extraOp
    */
 
   const inputs = input as string[]
-  const tasks = []
-  for (const source of inputs) {
-    for (const format of formats) {
+  const tasks: Array<{
+    getConfig(): GeneratorResult
+  }> = []
+
+  inputs.forEach((source) => {
+    formats.forEach((format) => {
       tasks.push({
         getConfig() {
           const rollupConfig = generatorRollupConfig({
@@ -126,8 +141,9 @@ const runImpl = async (optionImpl: BumpOptions, plugins: RollupPlugin[], extraOp
           return rollupConfig
         }
       })
-    }
-  }
+    })
+  })
+
   if (optionImpl.output?.dts && !extraOptions) {
     const dts = () => {
       const canload = loadModule('rollup-plugin-dts')
