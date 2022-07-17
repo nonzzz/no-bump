@@ -6,5 +6,11 @@ export default define({
     dir: 'lib',
     sourceMap: false,
     dts: true
+  },
+  internalOptions: {
+    plugins: {
+      postcss: false,
+      swc: true
+    }
   }
 })

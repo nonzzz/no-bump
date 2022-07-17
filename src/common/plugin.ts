@@ -10,7 +10,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import postcss from 'rollup-plugin-postcss'
 import merge from 'lodash.merge'
 
-import { len, serialize } from './utils'
+import { hasOwn, len, serialize } from './utils'
 
 import type { RollupPlugin, BumpOutputOptions, BumpInternalPlugins, BumpResolveOptions } from './interface'
 
@@ -29,7 +29,7 @@ interface ParaserPluginOptions {
 
 export const parserPlugins = (options: ParaserPluginOptions = {}): RollupPlugin[] => {
   const { userPlugins, internalPluginsOptions, options: userOptions } = options
-  const internalPlugins = withIntenralPlugins(internalPluginsOptions, userOptions)
+  const internalPlugins = withIntenralPlugins(internalPluginsOptions ?? {}, userOptions)
   const plugins = serializePlugin(internalPlugins, userPlugins)
 
   const getAliasPattern = (pattern?: BumpResolveOptions['alias']) => {
@@ -60,39 +60,68 @@ export const parserPlugins = (options: ParaserPluginOptions = {}): RollupPlugin[
 }
 
 export const withIntenralPlugins = (
-  internalPluginOtions?: BumpInternalPlugins,
+  internalPluginOtions: BumpInternalPlugins,
   options?: ParaserPluginOptions['options']
 ) => {
-  const internalPlugins: Record<string, RollupPlugin> = {
-    commonjs: commonjs(merge({ esmExternals: true }, internalPluginOtions?.commonjs)),
-    define: define(options?.resolve?.define),
-    nodeResolve: nodeResolve(internalPluginOtions?.nodeResolve),
-    swc: swc(
-      defineRollupSwcOption(
+  const fill = (internalPlugins: Record<string, (config: unknown) => RollupPlugin>) => {
+    const plugins: any = { ...internalPlugins }
+
+    for (const plugin in plugins) {
+      if (hasOwn(internalPluginOtions, plugin)) {
+        const value = internalPluginOtions[plugin as keyof BumpInternalPlugins]
+        if (value) {
+          plugins[plugin] = internalPlugins[plugin](typeof value === 'boolean' ? {} : value)
+        } else {
+          delete plugins[plugin]
+        }
+        continue
+      }
+      plugins[plugin] = internalPlugins[plugin]({})
+    }
+
+    return plugins
+  }
+
+  const internalPlugins: Record<string, (config: unknown) => RollupPlugin> = {
+    define: () =>
+      define(
         merge(
           {
-            sourceMaps: options?.sourceMap,
-            jsc: {
-              transform: {
-                react: options?.jsx
-              },
-              externalHelpers: options?.extractHelpers
-            }
+            preventAssignment: true
           },
-          internalPluginOtions?.swc
+          options?.resolve?.define
+        )
+      ),
+    commonjs: (config) => commonjs(merge({ esmExternals: true }, config)),
+    nodeResolve: (config: any) => nodeResolve(config),
+    swc: (config) =>
+      swc(
+        defineRollupSwcOption(
+          merge(
+            {
+              sourceMaps: options?.sourceMap,
+              jsc: {
+                transform: {
+                  react: options?.jsx
+                },
+                externalHelpers: options?.extractHelpers
+              }
+            },
+            config
+          )
+        )
+      ),
+    postcss: (config) =>
+      postcss(
+        merge(
+          {
+            extract: options?.extractCss
+          },
+          config
         )
       )
-    ),
-    postcss: postcss(
-      merge(
-        {
-          extract: options?.extractCss
-        },
-        internalPluginOtions?.postcss
-      )
-    )
   }
-  return internalPlugins
+  return fill(internalPlugins)
 }
 
 const serializePlugin = (plugins: Record<string, RollupPlugin>, userPlugins?: Record<string, RollupPlugin>) => {

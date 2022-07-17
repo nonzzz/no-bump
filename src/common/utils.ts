@@ -37,3 +37,5 @@ export const loadModule = (alias: string) => {
 }
 
 export const len = (tar: string | unknown[]) => tar.length
+
+export const hasOwn = (source: Record<string, any>, key: string) => Object.prototype.hasOwnProperty.call(source, key)

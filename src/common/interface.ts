@@ -102,10 +102,10 @@ export interface BumpResolveOptions {
 }
 
 export interface BumpInternalPlugins {
-  commonjs?: RollupCommonJSOptions
-  nodeResolve?: RollupNodeResolveOptions
-  swc?: RollupSwcOptions
-  postcss?: RollupPostCssOptions
+  commonjs?: RollupCommonJSOptions | boolean
+  nodeResolve?: RollupNodeResolveOptions | boolean
+  swc?: RollupSwcOptions | boolean
+  postcss?: RollupPostCssOptions | boolean
 }
 
 export interface BumpOptions {
