@@ -1,6 +1,6 @@
 {
   "name": "no-bump",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A zero config bundler.",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
