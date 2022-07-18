@@ -7,10 +7,19 @@ export default define({
     sourceMap: false,
     dts: true
   },
+  resolve: {
+    define: {
+      preventAssignment: 'preventAssignment'
+    }
+  },
   internalOptions: {
     plugins: {
       postcss: false,
-      swc: true
+      swc: {
+        jsc: {
+          target: 'es2017'
+        }
+      }
     }
   }
 })
