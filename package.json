@@ -1,12 +1,12 @@
 {
   "name": "no-bump",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A zero config bundler.",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "rm -rf lib && ts-node src/cli.ts",
+    "build": "rm -rf lib && ts-node src/cli.ts && mv lib/src/* lib && rm -rf lib/src",
     "test": "ava"
   },
   "bin": {
