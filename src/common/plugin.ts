@@ -10,7 +10,8 @@ import commonjs from '@rollup/plugin-commonjs'
 import postcss from 'rollup-plugin-postcss'
 import merge from 'lodash.merge'
 
-import { hasOwn, len, serialize } from './utils'
+import { hasOwn, isPlainObject, len, serialize } from './utils'
+import { print } from './logger'
 
 import type { RollupPlugin, BumpOutputOptions, BumpInternalPlugins, BumpResolveOptions } from './interface'
 
@@ -30,7 +31,12 @@ interface ParaserPluginOptions {
 export const parserPlugins = (options: ParaserPluginOptions = {}): RollupPlugin[] => {
   const { userPlugins, internalPluginsOptions, options: userOptions } = options
   const internalPlugins = withIntenralPlugins(internalPluginsOptions ?? {}, userOptions)
-  const plugins = serializePlugin(internalPlugins, userPlugins)
+  const { plugins: parserdUserPlugins, errMessage } = withUserPlugins(userPlugins ?? {})
+  if (len(errMessage)) errMessage.forEach((log) => print.tip(log))
+
+  const plugins = serializePlugin(internalPlugins, parserdUserPlugins)
+
+  debugger
 
   const getAliasPattern = (pattern?: BumpResolveOptions['alias']) => {
     if (!pattern) return []
@@ -122,6 +128,26 @@ export const withIntenralPlugins = (
       )
   }
   return fill(internalPlugins)
+}
+
+const withUserPlugins = (userPlugins: Record<string, RollupPlugin>) => {
+  const plugins: Record<string, RollupPlugin> = {}
+  const errMessage = []
+  for (const name in userPlugins) {
+    let plugin = userPlugins[name]
+    if (typeof plugin === 'function') {
+      plugin = (plugin as Function).apply(plugin)
+      if (!isPlainObject(plugin) || !plugin.name) {
+        errMessage.push(`[Bump]: Plugin ${name} not a standard rollup or vite plugin.`)
+        continue
+      }
+    }
+    plugins[name] = plugin
+  }
+  return {
+    plugins,
+    errMessage
+  }
 }
 
 const serializePlugin = (plugins: Record<string, RollupPlugin>, userPlugins?: Record<string, RollupPlugin>) => {

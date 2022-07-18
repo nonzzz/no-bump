@@ -76,8 +76,6 @@ const buildImpl = async (options?: BumpOptions, extraOptions?: Record<string, un
     format: unite(getFormat(optionImpl.output?.format))
   }
 
-  debugger
-
   /**
    * Because dts plugin will overwrites the out. so we
    * only change value of dts to judge we should or not
