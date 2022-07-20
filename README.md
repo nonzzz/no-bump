@@ -1,9 +1,9 @@
-# Bump
+# NoBump
 
-Bump is a zero configuration bundler.It base on rollup and you can customize it by your self.
+### OverView
 
-It provides `rollup-plugin-swc3`,`@rollup/plugin-commonjs`,`@rollup/plugin-node-resolve`,`rollup-plugin-postcss` by default.
-
+NoBump is an zero configuration bundler. It based on rollup and you can customize it by a easy way. Let you work with rollup with
+a light way.
 
 ### Install
 
@@ -15,7 +15,6 @@ $ yarn add no-bump -D
 
 ```
 
-
 ### Usage
 
 ```bash
@@ -24,30 +23,24 @@ $ bump
 
 ```
 
-bump will automatically read the config file in the directory. Support `bump.config.js`,`bump.config.ts`,`bump.yaml`,`bump.yml`
+bump will automatically read the config file in the your work sapce (default it's the process.cwd ). Support `bump.config.js`,`bump.config.ts`
 
 `bump` exports `define` API you only usage in your `.ts` or `.js` file.
 
 ```js
-
 import { define } from 'no-bump'
-
 
 export default define({
   // your config.
 })
-
 ```
 
 If you find with `cli` not enough. You also can use node API.
 
 ```js
-
-import { build , createBundle } from 'build'
-
+import { build, watch } from 'build'
 ```
 
-`build` will use the default config by default. If you want customize the config you can use `createBundle` it will exports `watch` and `build`.
+Node API doesn't read your config file it's more suitable for you to build into your build task.
 
-
-The internal plugins will use preset config. If you want to modify it. you can use `internalPlugins` to set your config.
+The full config please see [CONFIGS](./docs/CONFIG.md)
