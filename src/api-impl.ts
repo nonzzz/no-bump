@@ -1,4 +1,4 @@
-import { rollup, watch } from 'rollup'
+import * as rollup from 'rollup'
 import { universalInput, universalOutput, PRESET_FORMAT } from './common/universal-conf'
 import { isPlainObject, serialize, loadModule, omit, len } from './common/utils'
 import { readJson } from './common/fs'
@@ -21,8 +21,7 @@ export const define = (options?: BumpOptions) => options
 
 /**
  *@description create a bundle configuration exports watch and build api
- * Example:
- *  plugins: `Record<string,RollupPlugin>`
+ *@deprecated Warn:This API isn't expected. Will be removed in future. Please use `build` and `watch` instead.
  */
 export const createBundle = (options?: Omit<BumpOptions, 'input' | 'output'>) => {
   return {
@@ -39,7 +38,14 @@ export const createBundle = (options?: Omit<BumpOptions, 'input' | 'output'>) =>
   }
 }
 
+/**
+ * ExtraOptions only use for bump internal configs.
+ * I don't want expose too many details to user.
+ */
+
 export const build = (options?: BumpOptions) => buildImpl(options)
+
+export const watch = (options?: BumpOptions) => buildImpl(options, { watch: true })
 
 const defaultExternal = async () => {
   const tar = path.join(process.cwd(), 'package.json')
@@ -104,8 +110,7 @@ const buildImpl = async (options?: BumpOptions, extraOptions?: Record<string, un
 }
 
 /**
- * @description runImp is use for buildImpl .for future version i plan to add watch
- * API so needs to realized.
+ * extraOptions only use with internal.
  */
 
 const runImpl = async (optionImpl: BumpOptions, plugins: RollupPlugin[], extraOptions?: Record<string, unknown>) => {
@@ -126,52 +131,55 @@ const runImpl = async (optionImpl: BumpOptions, plugins: RollupPlugin[], extraOp
     getConfig(): GeneratorResult
   }> = []
 
-  inputs.forEach((source) => {
-    formats.forEach((format) => {
-      tasks.push({
-        getConfig() {
-          const rollupConfig = generatorRollupConfig({
-            source,
-            format,
-            config: optionImpl,
-            plugins
-          })
-          return rollupConfig
-        }
+  const generatorTasks = (plugins: RollupPlugin[], cb?: (origin: GeneratorResult) => GeneratorResult) => {
+    inputs.forEach((source) => {
+      formats.forEach((format) => {
+        tasks.push({
+          getConfig() {
+            const rollupConfig = generatorRollupConfig({
+              source,
+              format,
+              config: optionImpl,
+              plugins
+            })
+            return cb ? cb(rollupConfig) : rollupConfig
+          }
+        })
       })
     })
-  })
-
-  if (optionImpl.output?.dts && !extraOptions) {
-    const dts = () => {
-      const canload = loadModule('rollup-plugin-dts')
-      if (canload) return [canload()]
-      return []
-    }
-    // I should get all entryFileNames as input chunk.
-    await Promise.all(
-      tasks.map(async (task) => {
-        const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
-        const bundle = await rollup({
-          ...inputConfig,
-          plugins: dts()
-        })
-        await bundle.write(omit(outputConfig, ['entryFileNames']))
-      })
-    )
   }
+
+  generatorTasks(plugins)
+
+  /**
+   * TODO: I have'nt had a good soulution for generating type declaration file.
+   */
+
+  if (optionImpl.output?.dts) {
+    const dts = () => {
+      const load = loadModule('rollup-plugin-dts')
+      if (!load) {
+        print.tip('[Bump]: please install rollup-plugin-dts.')
+        return []
+      }
+      return [load()]
+    }
+    generatorTasks(dts(), (conf) => ({
+      inputConfig: conf.inputConfig,
+      outputConfig: omit(conf.outputConfig, ['entryFileNames'])
+    }))
+  }
+
   if (extraOptions?.watch) {
-    const configs = await Promise.all(
-      tasks.map(async (task) => {
-        const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
-        return {
-          ...inputConfig,
-          output: outputConfig,
-          watch: {}
-        }
-      })
-    )
-    const watcher = watch(configs)
+    const watchConfigs = tasks.map((task) => {
+      const { inputConfig, outputConfig } = task.getConfig()
+      return {
+        ...inputConfig,
+        output: outputConfig,
+        watch: {}
+      }
+    })
+    const watcher = rollup.watch(watchConfigs)
     watcher.on('event', (e) => {
       if (e.code === 'ERROR') {
         print.danger(e.error.message)
@@ -180,8 +188,8 @@ const runImpl = async (optionImpl: BumpOptions, plugins: RollupPlugin[], extraOp
   } else {
     await Promise.all(
       tasks.map(async (task) => {
-        const { inputConfig, outputConfig } = task.getConfig() as GeneratorResult
-        const bundle = await rollup(inputConfig)
+        const { inputConfig, outputConfig } = task.getConfig()
+        const bundle = await rollup.rollup(inputConfig)
         await bundle.write(outputConfig)
       })
     )

@@ -36,8 +36,6 @@ export const parserPlugins = (options: ParaserPluginOptions = {}): RollupPlugin[
 
   const plugins = serializePlugin(internalPlugins, parserdUserPlugins)
 
-  debugger
-
   const getAliasPattern = (pattern?: BumpResolveOptions['alias']) => {
     if (!pattern) return []
     if (Array.isArray(pattern)) return pattern
