@@ -17,9 +17,21 @@ $ yarn add no-bump -D
 
 ### Usage
 
+In your package.json
+
+```json
+{
+  "scripts": {
+    "build": "bump"
+  }
+}
+```
+
 ```bash
 
-$ bump
+$ yarn build
+
+$ npm run build
 
 ```
 
@@ -44,3 +56,13 @@ import { build, watch } from 'build'
 Node API doesn't read your config file it's more suitable for you to build into your build task.
 
 The full config please see [CONFIGS](./docs/CONFIG.md)
+
+### FAQ
+
+> Can i use vite or rollup plugin?
+
+- Yes. You can use them by yourself. If it's necessary.(If you import a plugin from vite, you should pay attention if they are vite-specific plugin).
+
+> It's different with others zero bundler?
+
+- Yes. `bump` is a minimalist style zero bundler. [ARCHITECUTRE](./docs/ARCHITECUTRE.md)

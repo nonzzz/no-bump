@@ -3,6 +3,6 @@
  * Author: Kanno
  */
 
-export { build, define, createBundle } from './api-impl'
+export { build, define, createBundle, watch } from './api-impl'
 
 export type { BumpOptions, BumpOutputOptions } from './common/interface'
