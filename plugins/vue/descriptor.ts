@@ -1,8 +1,12 @@
-import type { SFCDescriptor } from '@vue/compiler-sfc'
+/**
+ * descriptor information storage in memory.
+ */
 
-const cache = new Map<string, SFCDescriptor>()
+import type { VueSFCDescriptor } from './interface'
 
-export const setDescriptor = (id: string, descriptor: SFCDescriptor) => {
+const cache = new Map<string, VueSFCDescriptor>()
+
+export const setDescriptor = (id: string, descriptor: VueSFCDescriptor) => {
   cache.set(id, descriptor)
 }
 

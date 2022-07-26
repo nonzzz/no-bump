@@ -1,43 +1,16 @@
-import type {
-  SFCBlock,
-  SFCScriptCompileOptions,
-  SFCStyleCompileOptions,
-  SFCTemplateCompileOptions
-} from '@vue/compiler-sfc'
-
 import { createFilter } from '@rollup/pluginutils'
 
-import type { Plugin } from 'rollup'
-import { transformMain } from './transform'
-import { parserVuePartRequest } from './shared'
 import fs from 'fs'
 
-export interface Options {
-  include?: string | RegExp | (string | RegExp)[]
-  exclude?: string | RegExp | (string | RegExp)[]
-  customElement?: boolean | string | RegExp | (string | RegExp)[]
-  reactivityTransform?: boolean | string | RegExp | (string | RegExp)[]
-  isProduction?: boolean
-  script?: Partial<Pick<SFCScriptCompileOptions, 'babelParserPlugins'>>
-  template?: Partial<
-    Pick<
-      SFCTemplateCompileOptions,
-      | 'compilerOptions'
-      | 'compiler'
-      | 'compilerOptions'
-      | 'preprocessOptions'
-      | 'preprocessCustomRequire'
-      | 'transformAssetUrls'
-    >
-  >
-  style?: Partial<Pick<SFCStyleCompileOptions, 'trim'>>
-}
+import { parserVuePartRequest } from './shared'
 
-/**
- * ssr is not supported yet.Because we only do transform code and generator code.
- */
+import type { Plugin } from 'rollup'
+import type { BumpVuePluginOption } from './interface'
+import { transformMain } from './transform'
 
-export const Vue = (options: Options = {}): Plugin => {
+export { BumpVuePluginOption } from './interface'
+
+export const Vue = (options: BumpVuePluginOption = {}): Plugin => {
   const { include = /\.vue$/, exclude = [], customElement = /\.ce\.vue$/ } = options
 
   const filter = createFilter(include, exclude)
@@ -58,12 +31,21 @@ export const Vue = (options: Options = {}): Plugin => {
     },
     async transform(code, id) {
       const { query, fileName } = parserVuePartRequest(id)
+      const paramter = {
+        input: {
+          code,
+          id: fileName
+        },
+        options,
+        pluginContext: this
+      }
       //   main
       if (!query.vue && !filter(fileName)) {
         return
       }
       if (!query.vue) {
-        return transformMain(code, id, options, this)
+        return transformMain(paramter)
+        // return transformMain(code, id, options, this)
       }
     }
   }

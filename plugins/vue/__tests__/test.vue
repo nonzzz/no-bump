@@ -1,7 +1,8 @@
-<template>
-  <div>1</div>
-</template>
-
 <script>
-export default {}
+export default {
+  setup() {
+    const test = 'test'
+    return { test }
+  }
+}
 </script>
