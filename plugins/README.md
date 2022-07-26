@@ -1,4 +1,3 @@
-# Plguins
+# @bump/plugins
 
-This is a preset plugins for bump.
-
+bump plugins collections.
