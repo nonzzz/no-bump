@@ -8,7 +8,8 @@
   "scripts": {
     "build": "rm -rf lib && ts-node src/cli.ts && mv lib/src/* lib && rm -rf lib/src",
     "test": "ava",
-    "build:plugin": "ts-node plugins/build.ts"
+    "build:plugin": "ts-node plugins/build.ts",
+    "e2e": "ts-node plugins/vue/__tests__/e2e.spec.ts"
   },
   "bin": {
     "bump": "./bin/bump.js"

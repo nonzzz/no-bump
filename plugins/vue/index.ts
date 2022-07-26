@@ -8,13 +8,16 @@ import type {
 import { createFilter } from '@rollup/pluginutils'
 
 import type { Plugin } from 'rollup'
+import { transformMain } from './transform'
+import { parserVuePartRequest } from './shared'
+import fs from 'fs'
 
 export interface Options {
   include?: string | RegExp | (string | RegExp)[]
   exclude?: string | RegExp | (string | RegExp)[]
-  ssr?: boolean
   customElement?: boolean | string | RegExp | (string | RegExp)[]
   reactivityTransform?: boolean | string | RegExp | (string | RegExp)[]
+  isProduction?: boolean
   script?: Partial<Pick<SFCScriptCompileOptions, 'babelParserPlugins'>>
   template?: Partial<
     Pick<
@@ -30,22 +33,38 @@ export interface Options {
   style?: Partial<Pick<SFCStyleCompileOptions, 'trim'>>
 }
 
+/**
+ * ssr is not supported yet.Because we only do transform code and generator code.
+ */
+
 export const Vue = (options: Options = {}): Plugin => {
-  const { include = /\.vue$/, exclude = [], ssr = false, customElement = /\.ce\.vue$/ } = options
+  const { include = /\.vue$/, exclude = [], customElement = /\.ce\.vue$/ } = options
 
   const filter = createFilter(include, exclude)
-  
 
   return {
     name: 'bump:vue',
-    async load(id) {
-      console.log(id)
+    async resolveId(id, importer) {
+      const { query } = parserVuePartRequest(id)
+      if (query.vue) return id
     },
-    resolveId() {
-      //
+    load(id) {
+      const { query, fileName } = parserVuePartRequest(id)
+      if (query.vue) {
+        if (query.src) return fs.readFileSync(fileName, 'utf8')
+        // const descriptor =
+      }
+      return null
     },
     async transform(code, id) {
-      //
+      const { query, fileName } = parserVuePartRequest(id)
+      //   main
+      if (!query.vue && !filter(fileName)) {
+        return
+      }
+      if (!query.vue) {
+        return transformMain(code, id, options, this)
+      }
     }
   }
 }
