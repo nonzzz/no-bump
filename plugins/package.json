@@ -1,0 +1,11 @@
+{
+  "name": "@bump/plugin",
+  "private": true,
+  "workspaces": [
+    "./*"
+  ],
+  "description": "Bump plugin collection",
+  "dependencies": {
+    "@rollup/pluginutils": "^4.2.1"
+  }
+}

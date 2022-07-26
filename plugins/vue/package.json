@@ -1,0 +1,9 @@
+{
+  "name": "@bump/plugin-vue",
+  "description": "Bump plugin for Vue.js",
+  "version": "0.0.1",
+  "author": "kanno",
+  "dependencies": {
+    "@vue/compiler-sfc": "^3.2.37"
+  }
+}
